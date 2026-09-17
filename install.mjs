@@ -63,12 +63,18 @@ export async function installDistribution({ home, requestCore, runCodex }) {
     authorizationScope: 'whole-plugin', businessExecuted: false };
 }
 
+export async function checkQualification({ requestCore }) {
+  const result = await requestCore('system.ready', {});
+  if (result?.ready !== true) throw new Error('CORE_RESPONSE_INVALID');
+  return { ok: true, product: 'jingmai-ops-assistant', productAuthorized: true, installed: false, businessExecuted: false };
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const { requestCore } = await import('./rpc-client.mjs');
     const args = process.argv.slice(2);
-    if (args.length && (args.length !== 2 || args[0] !== '--home')) throw new Error('INVALID_ARGUMENTS');
-    const result = await installDistribution({ home: args[1] || path.join(os.homedir(), '.jingmai-ops-assistant'), requestCore,
+    if (args.length && !(args.length === 1 && args[0] === '--check') && (args.length !== 2 || args[0] !== '--home')) throw new Error('INVALID_ARGUMENTS');
+    const result = args[0] === '--check' ? await checkQualification({ requestCore }) : await installDistribution({ home: args[1] || path.join(os.homedir(), '.jingmai-ops-assistant'), requestCore,
       runCodex: async argumentsList => {
         const result = spawnSync('codex', [...argumentsList, '--json'], { encoding: 'utf8', shell: false, windowsHide: true, timeout: 120_000 });
         if (result.error || result.status !== 0) throw new Error('CODEX_INSTALL_FAILED');
@@ -76,7 +82,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       } });
     console.log(JSON.stringify(result));
   } catch (error) {
-    console.log(JSON.stringify({ ok: false, code: /^[A-Z_]{1,64}$/.test(error.message) ? error.message : 'INSTALLATION_STOPPED' }));
+    const { identityFailure } = await import('./identity.mjs');
+    console.log(JSON.stringify(/^ERP_/.test(error.code || error.message || '') ? identityFailure(error)
+      : { ok: false, code: /^[A-Z_]{1,64}$/.test(error.message) ? error.message : 'INSTALLATION_STOPPED' }));
     process.exitCode = 1;
   }
 }

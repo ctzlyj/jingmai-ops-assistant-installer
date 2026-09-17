@@ -5,7 +5,22 @@ import { gzipSync } from 'node:zlib';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { installDistribution } from '../install.mjs';
+import { installDistribution, checkQualification } from '../install.mjs';
+
+test('qualification check never downloads the package or invokes installation', async () => {
+  const calls = [];
+  const result = await checkQualification({ requestCore: async (name, args) => {
+    calls.push(name);
+    assert.deepEqual(args, {});
+    return { ready: true };
+  } });
+  assert.deepEqual(calls, ['system.ready']);
+  assert.equal(result.productAuthorized, true);
+  assert.equal(result.installed, false);
+  assert.equal(result.businessExecuted, false);
+  await assert.rejects(checkQualification({ requestCore: async () => ({ ready: false }) }), /CORE_RESPONSE_INVALID/);
+  await assert.rejects(checkQualification({ requestCore: async () => { throw new Error('ERP_NOT_ALLOWED'); } }), /ERP_NOT_ALLOWED/);
+});
 
 function fixture(context) {
   const root = mkdtempSync(path.join(os.tmpdir(), 'gated-install-'));

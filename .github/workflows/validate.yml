@@ -14,4 +14,4 @@ jobs:
         with:
           node-version: '24'
       - run: node verify.mjs
-      - run: node --test tests/installer.test.mjs
+      - run: node --test tests/installer.test.mjs tests/identity.test.mjs
