@@ -1,0 +1,10 @@
+{
+  ".gitattributes": "8b9c3028d6467ff3be7c793141927841d70f47f52d0590677438f488ca154992",
+  ".github/workflows/validate.yml": "1156acb76031b83adc776b1d0cbbddad40dab1189854030daf129ac26c06b079",
+  "identity.mjs": "28b052946aa0685463cb57c62a67863ab088979a173e2656f34e4e5d793ee862",
+  "install.mjs": "8f0b89f277ea1bebad82c19f0f1991be965482277f9b923a13b9dc7f8798888d",
+  "README.md": "1c5d7bdd488e57ff4fc6959a4694b2e841faacedb9f5f81bd8b91ff9436c11c1",
+  "rpc-client.mjs": "99014de0bce86548e43ebd35b1fe0e5b3cee749351e8f7497b3935c4df1a6e40",
+  "tests/installer.test.mjs": "429e1af6b47387104cd081d17e7b8020f1e42283acb0624dc3580c6dce031345",
+  "verify.mjs": "de1cee2985edcadabb1d02e898f01852880dc770e6a5d1ff2932be95427ea1ac"
+}
