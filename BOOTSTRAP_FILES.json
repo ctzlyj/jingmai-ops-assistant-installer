@@ -3,10 +3,10 @@
   ".github/workflows/validate.yml": "c70d0ece4ba14f50fff9653feef7e13d471e92b8c60ad26638d5997576fa2f25",
   "diagnose-identity.mjs": "ad1710465bb2e9697e6f623ee3dddc141faa8240578b9ca1c04285de03c3e9cd",
   "identity.mjs": "bd17653916cedd453acef73be432bd4b69a1a20f18b83fc75517d9a32a8d0e32",
-  "install.mjs": "4e66bfdb6e14b48f9341e342c08c341e06b7432b5215aef4ca7d58042d91000b",
-  "README.md": "83420f2d4db841f822bb18c3f9567127d5dfee47762838d8a0d471f20dc9c5dd",
+  "install.mjs": "0867e0cecfa8b7b1156f8370b4cb06984d869b7b6467ffcb7b14f46eb8009098",
+  "README.md": "ad95197ecd58df64a93d9c900161d2752178c5018d8c478e9f7783d6736584ea",
   "rpc-client.mjs": "99014de0bce86548e43ebd35b1fe0e5b3cee749351e8f7497b3935c4df1a6e40",
   "tests/identity.test.mjs": "6a335120e36527c87be16886c249f67399dc7639c468190cf6742a88375aebad",
-  "tests/installer.test.mjs": "fe2345ae8932ebad58e19506dab98909b7f166f30990e616e8e4bc7f3a3802ae",
+  "tests/installer.test.mjs": "23eb5a89c16f23fd724d9826f8f4601f3a63912ff542e7c5933f943dafe95c6e",
   "verify.mjs": "de1cee2985edcadabb1d02e898f01852880dc770e6a5d1ff2932be95427ea1ac"
 }

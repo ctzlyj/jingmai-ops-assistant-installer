@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import os from 'node:os';
 import path from 'node:path';
@@ -62,16 +62,32 @@ test('authorized compressed install is repeatable and preserves changed local fi
   const { home } = fixture(context);
   const { requestCore } = authorizedFixture();
   const commands = [];
-  const runCodex = async args => { commands.push(args); return { installedPath: 'fixture-only' }; };
+  const runCodex = async args => { commands.push(args); return args[2] === 'list' ? { marketplaces: [] } : { installedPath: 'fixture-only' }; };
   const result = await installDistribution({ home, requestCore, runCodex });
   assert.equal(result.version, '0.4.0');
-  assert.equal(commands.length, 2);
+  assert.equal(commands.length, 3);
   await installDistribution({ home, requestCore, runCodex });
   const filename = path.join(result.directory, '.agents/plugins/marketplace.json');
   writeFileSync(filename, 'local edits');
   await assert.rejects(installDistribution({ home, requestCore, runCodex }), /LOCAL_MODIFICATION_PRESERVED/);
   assert.equal(readFileSync(filename, 'utf8'), 'local edits');
-  assert.equal(commands.length, 4);
+  assert.equal(commands.length, 6);
+});
+
+test('upgrade switches only the owned versioned marketplace and preserves its old directory', async context => {
+  const { home } = fixture(context);
+  const previous = path.join(home, 'distributions', '0.3.9-' + 'b'.repeat(12));
+  const plugin = path.join(previous, 'plugins/jingmai-ops-assistant');
+  mkdirSync(plugin, { recursive: true });
+  writeFileSync(path.join(plugin, 'fixture.txt'), 'preserved');
+  writeFileSync(path.join(plugin, 'INVENTORY.json'), JSON.stringify({ 'fixture.txt': createHash('sha256').update('preserved').digest('hex') }));
+  const commands = [];
+  const runCodex = async args => { commands.push(args); return args[2] === 'list' ? { marketplaces: [{ name: 'jingmai-caixiao', root: previous }] } : { installedPath: 'fixture-only' }; };
+  await installDistribution({ home, ...authorizedFixture(), runCodex });
+  assert.equal(commands[1].join(' '), 'plugin marketplace remove jingmai-caixiao');
+  assert.equal(readFileSync(path.join(plugin, 'fixture.txt'), 'utf8'), 'preserved');
+  const unrelated = async args => args[2] === 'list' ? { marketplaces: [{ name: 'jingmai-caixiao', root: path.dirname(home) }] } : assert.fail('no changes');
+  await assert.rejects(installDistribution({ home, ...authorizedFixture(), runCodex: unrelated }), /MARKETPLACE_SOURCE_CONFLICT/);
 });
 
 test('wrong product and revoked authorization fail before file creation', async context => {

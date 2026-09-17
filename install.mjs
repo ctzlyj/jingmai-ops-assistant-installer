@@ -57,6 +57,32 @@ export async function installDistribution({ home, requestCore, runCodex }) {
     }
     if (digest(readFileSync(filename)) !== file.sha256) throw new Error('INSTALLATION_VERIFY_FAILED');
   }
+  const configured = await runCodex(['plugin', 'marketplace', 'list']);
+  if (!Array.isArray(configured?.marketplaces)) throw new Error('MARKETPLACE_STATE_INVALID');
+  const existing = configured.marketplaces.filter(item => item.name === 'jingmai-caixiao');
+  if (existing.length > 1) throw new Error('MARKETPLACE_SOURCE_CONFLICT');
+  if (existing.length) {
+    const previous = path.resolve(String(existing[0].root || '').replace(/^\\\\\?\\/, ''));
+    if (previous !== directory) {
+      if (path.dirname(previous) !== path.resolve(home, 'distributions') || !/^\d+\.\d+\.\d+-[a-f0-9]{12}$/.test(path.basename(previous))) throw new Error('MARKETPLACE_SOURCE_CONFLICT');
+      rejectSymlinks(previous);
+      const oldPlugin = path.join(previous, 'plugins/jingmai-ops-assistant');
+      const inventoryFile = path.join(oldPlugin, 'INVENTORY.json');
+      rejectSymlinks(inventoryFile);
+      const inventory = JSON.parse(readFileSync(inventoryFile, 'utf8'));
+      for (const [relative, expected] of Object.entries(inventory)) {
+        safePath(relative);
+        const filename = path.join(oldPlugin, relative);
+        rejectSymlinks(filename);
+        if (!existsSync(filename) || digest(readFileSync(filename)) !== expected) throw new Error('LOCAL_MODIFICATION_PRESERVED');
+      }
+      const intent = path.join(home, 'marketplace-switch-' + manifest.packageSha256 + '.json');
+      rejectSymlinks(intent);
+      if (existsSync(intent)) throw new Error('MARKETPLACE_RECONCILIATION_REQUIRED');
+      writeFileSync(intent, JSON.stringify({ previous, next: directory, version: manifest.pluginVersion }), { flag: 'wx' });
+      await runCodex(['plugin', 'marketplace', 'remove', 'jingmai-caixiao']);
+    }
+  }
   await runCodex(['plugin', 'marketplace', 'add', directory]);
   const installed = await runCodex(['plugin', 'add', 'jingmai-ops-assistant@jingmai-caixiao']);
   return { ok: true, version: manifest.pluginVersion, directory, installedPath: installed.installedPath,
