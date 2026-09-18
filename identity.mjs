@@ -5,18 +5,18 @@ const CALLER = process.platform === 'darwin' ? 'hio_plugin_joydesk_Mac' : 'hio_p
 const PORTS = Array.from({ length: 10 }, (_, index) => 8988 + index * 2);
 const DETAILS = new WeakMap();
 const MESSAGES = {
-  ERP_HIOFFICE_UNREACHABLE: '校验程序未能连接本机京ME身份接口，不代表京ME未登录。请检查该进程与桌面京ME是否处于同一台电脑和用户环境；由IT核对本机接口或安全策略，不要反复登录或关闭防护。',
-  ERP_HIOFFICE_TIMEOUT: '本机京ME身份接口响应超时，不能据此判断未登录。请保留诊断结果，由维护人排查响应耗时；不要反复安装。',
-  ERP_HIOFFICE_ACCESS_DENIED: '访问本机京ME身份接口被拒绝。请由IT核对进程访问权限，不要扩大权限或绕过公司策略。',
-  ERP_HIOFFICE_PROTOCOL_ERROR: '已收到本机接口响应，但身份协议内容不符合预期。请核对京ME版本与接口兼容性，不要把此问题当成未登录。',
-  ERP_TOKEN_EXCHANGE_FAILED: '本机身份响应已取得，但京ME网关换票失败。请交维护人排查换票阶段，不要重复开白或重新安装。',
-  ERP_IDENTITY_REJECTED: '身份验票服务拒绝了当前票据；这不是插件开白结果。请先由维护人确认票据有效性和服务状态，再决定是否需要重新登录。',
-  ERP_AUTH_RESPONSE_INVALID: '身份服务返回不符合预期的响应。已停止，不输出响应正文或凭据；请交维护人核对协议。',
-  ERP_AUTH_TIMEOUT: '身份校验达到总时限。请根据失败阶段排查网络或本机接口，不等于未登录。',
-  ERP_AUTH_UNAVAILABLE: '身份服务请求失败。请检查京东网络及失败阶段，不要关闭验证或改用其他人的身份。',
-  ERP_NOT_LOGGED_IN: '未取得有效身份凭证；仅凭此码不能判断桌面京ME未登录。已登录时请运行只读诊断，不要反复登录。',
-  ERP_NOT_ALLOWED: '身份校验后未获准使用该插件，请联系负责人核对本人的插件产品资格，不要借用账号。',
-  ERP_AUTH_INVALID: '身份响应校验失败，请停止并联系维护人。',
+  ERP_HIOFFICE_UNREACHABLE: '未连接到本机京ME接口，不代表未登录。由当前 Codex 核对同机同用户、实际端口与执行环境，实施已授权修复并回查，不反复登录或关闭防护。',
+  ERP_HIOFFICE_TIMEOUT: '本机京ME响应超时，不代表未登录。由当前 Codex 排查进程和响应耗时，按证据修复并回查，不反复安装。',
+  ERP_HIOFFICE_ACCESS_DENIED: '本机接口访问被拒绝。由当前 Codex 核对实际进程身份及权限，带本人完成必要批准，不绕过公司策略。',
+  ERP_HIOFFICE_PROTOCOL_ERROR: '本机身份响应协议异常。由当前 Codex 核对京ME版本、实际接口与官方兼容性，不把一次异常直接认定为发行缺陷。',
+  ERP_TOKEN_EXCHANGE_FAILED: '本机身份响应已取得，但换票失败。由当前 Codex 排查换票网络和有效期，修复后重新验权，不重复开白或盲目重装。',
+  ERP_IDENTITY_REJECTED: '当前票据被拒绝，不是产品资格结论。由当前 Codex 核对当前本人会话和服务状态，必要时引导本人重新登录并回查，不输出票据。',
+  ERP_AUTH_RESPONSE_INVALID: '身份响应格式异常，停止受保护操作。由当前 Codex 排查实际版本与协议，不输出响应正文或凭据。',
+  ERP_AUTH_TIMEOUT: '身份校验达到总时限。由当前 Codex 按失败阶段排查网络或本机接口，不等于未登录。',
+  ERP_AUTH_UNAVAILABLE: '身份服务请求失败。由当前 Codex 排查京东网络和失败阶段，修复后重新验权，不关闭验证或借用身份。',
+  ERP_NOT_LOGGED_IN: '未取得有效身份，不能仅据此判断京ME未登录。由当前 Codex 先诊断本人本机环境，确需登录时引导本人完成并回查。',
+  ERP_NOT_ALLOWED: '本人插件产品资格未通过，请联系负责人 ERP：caotong.888 核对资格，不借用账号或绕过门禁。',
+  ERP_AUTH_INVALID: '身份响应校验失败，停止受保护操作。由当前 Codex 排查实际调用参数和执行环境，不以失败码代替根因。',
 };
 
 function failure(code, stage, ports) {
@@ -28,7 +28,10 @@ function failure(code, stage, ports) {
 export function identityFailure(error) {
   const candidate = error?.code || error?.message;
   const code = Object.hasOwn(MESSAGES, candidate || '') ? candidate : 'ERP_AUTH_UNAVAILABLE';
-  return { ok: false, code, ...(DETAILS.get(error) || {}), message: MESSAGES[code] };
+  const recovery = code === 'ERP_NOT_ALLOWED'
+    ? { owner: 'caotong.888', reason: 'product-qualification' }
+    : { owner: 'codex', reason: 'diagnose-repair-recheck' };
+  return { ok: false, code, ...(DETAILS.get(error) || {}), message: MESSAGES[code], recovery };
 }
 
 async function jsonResponse(response, stage) {

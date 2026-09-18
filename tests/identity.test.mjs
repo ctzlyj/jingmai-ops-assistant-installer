@@ -4,6 +4,23 @@ import { setTimeout as delay } from 'node:timers/promises';
 import * as identity from '../identity.mjs';
 import { diagnoseIdentity } from '../diagnose-identity.mjs';
 
+test('identity failures keep local recovery with Codex; only product qualification routes to owner', () => {
+  for (const code of ['ERP_HIOFFICE_UNREACHABLE', 'ERP_HIOFFICE_TIMEOUT', 'ERP_HIOFFICE_ACCESS_DENIED',
+    'ERP_HIOFFICE_PROTOCOL_ERROR', 'ERP_TOKEN_EXCHANGE_FAILED', 'ERP_IDENTITY_REJECTED',
+    'ERP_AUTH_RESPONSE_INVALID', 'ERP_AUTH_TIMEOUT', 'ERP_AUTH_UNAVAILABLE', 'ERP_NOT_LOGGED_IN', 'ERP_AUTH_INVALID']) {
+    const report = identity.identityFailure(new Error(code));
+    assert.equal(report.code, code);
+    assert.equal(report.ok, false);
+    assert.equal(report.recovery.owner, 'codex');
+    assert.match(report.message, /Codex/);
+    assert.doesNotMatch(report.message, /交IT|由IT|交维护人|联系维护人/);
+  }
+  const qualification = identity.identityFailure(new Error('ERP_NOT_ALLOWED'));
+  assert.equal(qualification.recovery.owner, 'caotong.888');
+  assert.equal(qualification.recovery.reason, 'product-qualification');
+  assert.match(qualification.message, /caotong\.888/);
+});
+
 function fixture(local, exchange = { code: 0, data: { accessToken: 'synthetic-ticket' } }, verified = { IsSuccess: true, Data: { pin: 'fixture.user' } }) {
   const calls = [];
   const fetchImpl = async (target, options) => {
