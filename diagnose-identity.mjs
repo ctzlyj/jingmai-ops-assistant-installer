@@ -1,14 +1,15 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { verifyIdentity, identityFailure } from './identity.mjs';
+import { verifyIdentity } from './identity.mjs';
+import { enrichIdentityFailure } from './identity-environment.mjs';
 
-export async function diagnoseIdentity({ verify = verifyIdentity } = {}) {
+export async function diagnoseIdentity({ verify = verifyIdentity, inspect } = {}) {
   try {
     const result = await verify({ timeoutMs: 60_000 });
     if (result?.authenticated !== true) throw new Error('ERP_AUTH_INVALID');
     return { ok: true, identityVerified: true, productAuthorizationChecked: false, installed: false, businessExecuted: false };
   } catch (error) {
-    return { ...identityFailure(error), identityVerified: false, productAuthorizationChecked: false, installed: false, businessExecuted: false };
+    return { ...await enrichIdentityFailure(error, { inspect }), identityVerified: false, productAuthorizationChecked: false, installed: false, businessExecuted: false };
   }
 }
 

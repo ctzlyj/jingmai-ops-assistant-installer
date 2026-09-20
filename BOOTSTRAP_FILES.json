@@ -1,12 +1,15 @@
 {
   ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
-  ".github/workflows/validate.yml": "c70d0ece4ba14f50fff9653feef7e13d471e92b8c60ad26638d5997576fa2f25",
-  "diagnose-identity.mjs": "ad1710465bb2e9697e6f623ee3dddc141faa8240578b9ca1c04285de03c3e9cd",
-  "identity.mjs": "42728b8631fd8d0a18b4cbb71b49e17d1981fb07bd269cb1f17710beaa99d7b5",
-  "install.mjs": "0867e0cecfa8b7b1156f8370b4cb06984d869b7b6467ffcb7b14f46eb8009098",
-  "README.md": "81cc84f798dce28dc14780ab1e9bc548c650d6a9440bb0ceb21bc97e89fc8d1d",
+  ".github/workflows/validate.yml": "2ff29f8f0aa75caba5f2ee5bcc99331850a09099623eeecfaecf0c3865288a6a",
+  "diagnose-identity.mjs": "d0f4c7256cb58d63a4c810f4f0eebd937f61cc36e3fc212b6d1659608c1de697",
+  "identity-environment.mjs": "7765c499293799b5d422425bcbcd342a54e98e6069351f38abb5c0e0c5ddad7e",
+  "identity-transport.mjs": "068320100a234374c9dfddb406625381ef1ac8d3b5c3a454c55fb7b3b910f6f1",
+  "identity.mjs": "66482b5af27d10c911e0b83d848483500b92648606b91785d46edc7df9d71bcb",
+  "install.mjs": "be95929ae41ab297ef2ad2e4b331c795c02fea28530d27bb6f7bd8cf41f757ec",
+  "README.md": "658c57439b9aca88551c91a3caf5741cd0c4a438e39e9d5dca95fdaef626181a",
   "rpc-client.mjs": "99014de0bce86548e43ebd35b1fe0e5b3cee749351e8f7497b3935c4df1a6e40",
-  "tests/identity.test.mjs": "313654e26ba833402a56c3c14b8625c404f0e41f7406c2a26d6c5e7f308f005c",
+  "tests/identity-recovery.test.mjs": "f14dfe158ff20afabcc2c799db26e64de7a591904606fce386b5623be5400963",
+  "tests/identity.test.mjs": "937b51cfa7cb3e81886e09bd3067c87e0a2c3c4b5776951abc28471a4defe04c",
   "tests/installer.test.mjs": "23eb5a89c16f23fd724d9826f8f4601f3a63912ff542e7c5933f943dafe95c6e",
   "verify.mjs": "de1cee2985edcadabb1d02e898f01852880dc770e6a5d1ff2932be95427ea1ac"
 }

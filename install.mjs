@@ -95,6 +95,14 @@ export async function checkQualification({ requestCore }) {
   return { ok: true, product: 'jingmai-ops-assistant', productAuthorized: true, installed: false, businessExecuted: false };
 }
 
+export async function installerFailure(error, { reportIdentityFailure, ...options } = {}) {
+  if (/^ERP_/.test(error.code || error.message || '')) {
+    const enrichIdentityFailure = reportIdentityFailure || (await import('./identity-environment.mjs')).enrichIdentityFailure;
+    return { ...await enrichIdentityFailure(error, options), installed: false, businessExecuted: false };
+  }
+  return { ok: false, code: /^[A-Z_]{1,64}$/.test(error.message) ? error.message : 'INSTALLATION_STOPPED' };
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const { requestCore } = await import('./rpc-client.mjs');
@@ -108,9 +116,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       } });
     console.log(JSON.stringify(result));
   } catch (error) {
-    const { identityFailure } = await import('./identity.mjs');
-    console.log(JSON.stringify(/^ERP_/.test(error.code || error.message || '') ? identityFailure(error)
-      : { ok: false, code: /^[A-Z_]{1,64}$/.test(error.message) ? error.message : 'INSTALLATION_STOPPED' }));
+    console.log(JSON.stringify(await installerFailure(error)));
     process.exitCode = 1;
   }
 }

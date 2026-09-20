@@ -1,6 +1,6 @@
-# 京麦运营助手0.4.6安装入口
+# 京麦运营助手0.4.7安装入口
 
-安装入口修订0.4.6-bootstrap.1；完整客户端0.4.6。
+安装入口修订0.4.7-bootstrap.1；完整客户端0.4.7。
 
 # 京麦运营助手（采销版）· ERP安装入口
 
@@ -29,12 +29,19 @@ https://github.com/ctzlyj/jingmai-ops-assistant-installer
 ## 身份诊断
 `node verify.mjs`校验入口文件，`node diagnose-identity.mjs`只读检查本人身份，`node install.mjs --check`查询产品资格，不安装或操作店铺。诊断输出阶段及错误码，不输出身份票据、Cookie或Key。
 
+本入口包含以下身份恢复；版本与发布状态以正式Release及服务端清单为准：
+- 本机请求使用直连回环HTTP，不改变远端请求、系统代理或防护配置。IPv4不可达/超时后尝试相同官方候选端口的IPv6；仅连接类故障等待750毫秒再试一轮，受单请求5秒及总时限约束。拒绝访问、异常协议、换票或产品拒绝不盲目重试；不新增18988等猜测端口。
+- 安装验权失败时自动附带脱敏环境诊断：Node版本、WSL/远程环境线索，以及Windows已知客户端进程、同用户/会话和候选端口监听线索。不会读取聊天、凭据文件或店铺；进程名称只是线索，不证明已登录，未识别进程也不证明未安装。
+- 当前Codex根据具体阶段继续诊断、恢复并回查，不默认要求联系维护人。确需本人验证或权限时说明具体动作；只有产品资格，或已证明必须修改安装器发版且无合规替代的缺陷，才需要维护介入。
+- 不自动关闭/重启京ME，不复制登录态或修改受校验入口文件。修复后先诊断、再检查产品资格，成功后继续原安装请求；不自动连接店铺或恢复业务。
+
 | 错误 | 含义 |
 | --- | --- |
 | ERP_HIOFFICE_UNREACHABLE | 本机身份接口不可达 |
 | ERP_HIOFFICE_TIMEOUT | 身份接口超时 |
 | ERP_HIOFFICE_ACCESS_DENIED | 本次接口访问被拒绝 |
 | ERP_HIOFFICE_PROTOCOL_ERROR | 本机响应不符合协议 |
+| ERP_HIOFFICE_TRANSPORT_ERROR | 本机请求运行时异常，不能直接归因为未登录或接口未启动 |
 | ERP_TOKEN_EXCHANGE_FAILED | 换票失败 |
 | ERP_IDENTITY_REJECTED | 验票服务拒绝票据 |
 | ERP_NOT_ALLOWED | 本人产品资格未通过 |

@@ -6,7 +6,7 @@ import { diagnoseIdentity } from '../diagnose-identity.mjs';
 
 test('identity failures keep local recovery with Codex; only product qualification routes to owner', () => {
   for (const code of ['ERP_HIOFFICE_UNREACHABLE', 'ERP_HIOFFICE_TIMEOUT', 'ERP_HIOFFICE_ACCESS_DENIED',
-    'ERP_HIOFFICE_PROTOCOL_ERROR', 'ERP_TOKEN_EXCHANGE_FAILED', 'ERP_IDENTITY_REJECTED',
+    'ERP_HIOFFICE_PROTOCOL_ERROR', 'ERP_HIOFFICE_TRANSPORT_ERROR', 'ERP_TOKEN_EXCHANGE_FAILED', 'ERP_IDENTITY_REJECTED',
     'ERP_AUTH_RESPONSE_INVALID', 'ERP_AUTH_TIMEOUT', 'ERP_AUTH_UNAVAILABLE', 'ERP_NOT_LOGGED_IN', 'ERP_AUTH_INVALID']) {
     const report = identity.identityFailure(new Error(code));
     assert.equal(report.code, code);
@@ -25,8 +25,9 @@ function fixture(local, exchange = { code: 0, data: { accessToken: 'synthetic-ti
   const calls = [];
   const fetchImpl = async (target, options) => {
     const url = new URL(target);
-    calls.push(url.hostname === '127.0.0.1' ? Number(url.port) : url.searchParams.get('functionId') || 'verify');
-    if (url.hostname === '127.0.0.1') return local(url, options);
+    const loopback = ['127.0.0.1', '[::1]'].includes(url.hostname);
+    calls.push(loopback ? Number(url.port) : url.searchParams.get('functionId') || 'verify');
+    if (loopback) return local(url, options);
     if (url.searchParams.get('functionId') === 'desk.agent.auth.encrypt') return Response.json({ code: 0, data: { aesKey: 'synthetic-key', content: 'synthetic-encrypted-request' } });
     if (url.searchParams.get('functionId') === 'desk.agent.auth.getWebToken') return Response.json(exchange);
     if (url.pathname === '/api') return Response.json(verified);
@@ -53,7 +54,7 @@ for (const [name, local, code] of [
       assert.equal(error.code, code);
       assert.equal(error.stage, 'hioffice');
       const report = identity.identityFailure(error);
-      assert.equal(report.diagnostics.ports.length, 10);
+      assert.equal(report.diagnostics.ports.length, ['ERP_HIOFFICE_UNREACHABLE', 'ERP_HIOFFICE_TIMEOUT'].includes(code) ? 40 : 10);
       assert.doesNotMatch(JSON.stringify(report), /synthetic|cookie|aesKey|accessToken/i);
       return true;
     });
@@ -124,7 +125,7 @@ test('diagnosis does not disclose identity or claim installation or product gran
   assert.equal(result.productAuthorizationChecked, false);
   assert.equal(result.installed, false);
   assert.doesNotMatch(JSON.stringify(result), /synthetic-private/);
-  const failed = await diagnoseIdentity({ verify: async () => { throw new Error('synthetic-private-ticket'); } });
+  const failed = await diagnoseIdentity({ inspect: async () => ({ platform: 'test' }), verify: async () => { throw new Error('synthetic-private-ticket'); } });
   assert.equal(failed.ok, false);
   assert.doesNotMatch(JSON.stringify(failed), /synthetic-private/);
 });
